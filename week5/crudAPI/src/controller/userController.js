@@ -6,6 +6,10 @@ dotenv.config()
 
 const createUserValidation = require('../validations/userValidation')
 
+
+const cloudinary = require('../utils/cloudinary')
+const fs = require('fs')
+
 //No two users should have the same email
 //passwords should be hashed
 //Handle validations 
@@ -110,11 +114,23 @@ const generateRefreshToken = async(req, res)=> {
 const uploadAvatar = async (req, res) => {
 
    const {id} = req.user
-   console.log(req.file)
+   
+   const uploader = async (path) => await cloudinary.uploads(path , 'avatars')
+   let url;
+
+   const file = req.file
+
+   const {path} = file
+   const newPath = await uploader(path)
+
+   url = newPath.url
+
+   fs.unlinkSync(path)
+             
 
    let user = await User.findOne({_id: id})
 
-   user.avatar = `localhost:4000/${req.file.path}`
+   user.avatar = url.toString()
 
    await user.save()
 
